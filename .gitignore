@@ -1,0 +1,21 @@
+# Fișiere specifice PyCharm
+.idea/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Mediu virtualK
+venv/
+env/
+
+# Fișiere OS
+.DS_Store
+Thumbs.db
+
+# Fișiere de configurare locală
+*.local
+
+# Debug
+*.log
