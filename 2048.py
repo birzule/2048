@@ -47,6 +47,7 @@ class Tile:
         self.col = col
         self.x = col * RECT_WIDTH
         self.y = row * RECT_HEIGHT
+        self.combinat = False
 
     def culoare(self):
         # pentru blocul de culoare 2 vrem sa obtinem indexul 0 din COLORS, pentru blocul de culoare 4 vrem indexul 1 etc.
@@ -115,7 +116,9 @@ def generare_random(tiles):
 
 def mutare_blocuri(screen, tiles, clock, direction):
     update = True
-    blocks = set()
+
+    for tile in tiles.values():
+        tile.combinat = False
 
     if direction == "left":
         sort_func = lambda x: x.col
@@ -166,6 +169,9 @@ def mutare_blocuri(screen, tiles, clock, direction):
     while update:
         clock.tick(FPS)
         update = False
+        # la fiecare pas blochez doar blocurile care s-au unit atunci,
+        # pentru a le putea folosi din nou la pasul urmator
+        blocks = set()
         sorted_tiles = sorted(tiles.values(), key=sort_func, reverse=reverse)
 
         for i, tile in enumerate(sorted_tiles):
@@ -174,13 +180,14 @@ def mutare_blocuri(screen, tiles, clock, direction):
             next_tile = get_next_tile(tile)
             if not next_tile:
                 tile.mutare(delta)
-            elif tile.value == next_tile.value and tile not in blocks and next_tile not in blocks:
+            elif tile.value == next_tile.value and not tile.combinat and not next_tile.combinat:
                 if merge_check(tile, next_tile):
                     tile.mutare(delta)
                 else:
                     next_tile.value *= 2
+                    tile.combinat = True
+                    next_tile.combinat = True
                     sorted_tiles.pop(i)
-                    blocks.add(next_tile)
             elif move_check(tile, next_tile):
                 tile.mutare(delta)
             else:
@@ -217,7 +224,16 @@ def generare_blocuri():
 
     return tiles
 
-def desenare_butoane(screen, rect, text, font, culoareButon, culoareText):
+def desenare_butoane(screen, rect, text, font, culoareButon, culoareText, peButon=False):
+
+    # adaguarea unui efect de umbra
+    shadow_offset = 5
+    shadow_color = (30, 30, 30)
+    shadow_rect = pygame.Rect(rect.x + shadow_offset, rect.y + shadow_offset, rect.width, rect.height)
+
+    if peButon:
+        culoareButon = tuple(min(255, var + 40) for var in culoareButon)
+
     # desenarea propriu zisa a butonului
     pygame.draw.rect(screen, culoareButon, rect, border_radius=10)
 
@@ -231,13 +247,17 @@ def desenare_butoane(screen, rect, text, font, culoareButon, culoareText):
     screen.blit(text_render, (text_x, text_y))
 
 def butoane_meniu(screen, start_rect, quit_rect):
-    screen.fill((30, 30, 30))
+    screen.fill(BACKGROUND_COLOR)
+
+    mouse_pos = pygame.mouse.get_pos()
+    peButon_start = start_rect.collidepoint(mouse_pos)
+    peButon_quit = quit_rect.collidepoint(mouse_pos)
 
     # desenez butonul pentru Start Game
-    desenare_butoane(screen, start_rect, "Start Game", FONT, (0, 200, 0), (255, 255, 255))
+    desenare_butoane(screen, start_rect, "Start Game", FONT, (0, 200, 0), (255, 255, 255), peButon = peButon_start)
 
     # desenez butonul pentru Quit
-    desenare_butoane(screen, quit_rect, "Quit", FONT, (200, 0, 0), (255, 255, 255))
+    desenare_butoane(screen, quit_rect, "Quit", FONT, (200, 0, 0), (255, 255, 255), peButon = peButon_quit)
 
     pygame.display.update()
 
@@ -246,9 +266,9 @@ def meniu(screen):
     start_rect = pygame.Rect(WIDTH // 2 - 150, HEIGHT // 2 - 110, 350, 100)
     quit_rect = pygame.Rect(WIDTH // 2 - 150, HEIGHT // 2 + 30, 350, 100)
 
-    in_meniu = True
+    in_menu = True
 
-    while in_meniu:
+    while in_menu:
         clock.tick(FPS)
         butoane_meniu(screen, start_rect, quit_rect)
 
@@ -260,7 +280,7 @@ def meniu(screen):
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
                 if start_rect.collidepoint(mouse_pos):
-                    in_meniu = False
+                    in_menu = False
                 elif quit_rect.collidepoint(mouse_pos):
                     pygame.quit()
                     exit()
