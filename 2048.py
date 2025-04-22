@@ -217,6 +217,53 @@ def generare_blocuri():
 
     return tiles
 
+def desenare_butoane(screen, rect, text, font, culoareButon, culoareText):
+    # desenarea propriu zisa a butonului
+    pygame.draw.rect(screen, culoareButon, rect, border_radius=10)
+
+    text_render = font.render(text, True, culoareText)
+
+    # calculeaza pozitia centrata a textului
+    text_x = rect.x + (rect.width - text_render.get_width()) // 2
+    text_y = rect.y + (rect.height - text_render.get_height()) // 2
+
+    # afiseaza textul
+    screen.blit(text_render, (text_x, text_y))
+
+def butoane_meniu(screen, start_rect, quit_rect):
+    screen.fill((30, 30, 30))
+
+    # desenez butonul pentru Start Game
+    desenare_butoane(screen, start_rect, "Start Game", FONT, (0, 200, 0), (255, 255, 255))
+
+    # desenez butonul pentru Quit
+    desenare_butoane(screen, quit_rect, "Quit", FONT, (200, 0, 0), (255, 255, 255))
+
+    pygame.display.update()
+
+def meniu(screen):
+    clock = pygame.time.Clock()
+    start_rect = pygame.Rect(WIDTH // 2 - 150, HEIGHT // 2 - 110, 350, 100)
+    quit_rect = pygame.Rect(WIDTH // 2 - 150, HEIGHT // 2 + 30, 350, 100)
+
+    in_meniu = True
+
+    while in_meniu:
+        clock.tick(FPS)
+        butoane_meniu(screen, start_rect, quit_rect)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                if start_rect.collidepoint(mouse_pos):
+                    in_meniu = False
+                elif quit_rect.collidepoint(mouse_pos):
+                    pygame.quit()
+                    exit()
 
 def main(screen):
     clock = pygame.time.Clock()
@@ -249,6 +296,7 @@ def main(screen):
 
 
 if __name__ == "__main__":
+    meniu(SCREEN)
     main(SCREEN)
 
 
